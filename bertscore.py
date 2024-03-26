@@ -115,16 +115,17 @@ def compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples,
 #    homonyms_ru
 #       Total: 293/859
 #       Total used words: 116/116
+
 def bert_score():
-    filename = "ambiguity_filtered_by_3_samples.json"
-    # filename = "homonyms_ru.json"
+    # filename = "ambiguity_filtered_by_3_samples.json"
+    filename = "homonyms_ru.json"
     print("bert_score")
     print(filename)
     with open(filename) as ambiguity_filtered_by_3_samples_json:
         ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
         valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
         print(f"Valid number {len(valid_words)}")
-        compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples, "cointegrated/rubert-tiny2")
+        compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples, "ai-forever/rugpt3large_based_on_gpt2")
 
 
 if __name__ == "__main__":

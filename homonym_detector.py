@@ -1,6 +1,7 @@
 import json
 import string
 from pprint import pprint
+import pymorphy2
 
 import snowballstemmer
 from gensim.models import Word2Vec, Phrases
@@ -10,9 +11,13 @@ from nltk.corpus import stopwords
 
 from io_utils import read_and_filter_words
 from similarity_metrics.cosine import similarity_cosine_w2v, similarity_cosine_numpy
+from similarity_metrics.distance_metric import compare_by_sklearn
 
 
-def get_word_texts_as_sentences(ambiguity_filtered_by_3_samples, words) -> list:
+morph = pymorphy2.MorphAnalyzer()
+
+
+def get_word_texts_as_sentences(ambiguity_filtered_by_3_samples, words, use_lemma=True, remove_stop_words=True) -> list:
     sentences = []
     stop_words = set(stopwords.words("russian"))
     stop_words.update(set(string.punctuation))
@@ -21,8 +26,11 @@ def get_word_texts_as_sentences(ambiguity_filtered_by_3_samples, words) -> list:
             if sample["адекватность"] and sample["meaning"] is not None:
                 for sent in sent_tokenize(sample["text"]):
                     tokens = word_tokenize(sent)
-                    filtered_tokens = [word for word in tokens if word not in stop_words]
-                    sentences.append(filtered_tokens)
+                    if remove_stop_words:
+                        tokens = [word for word in tokens if word not in stop_words]
+                    if use_lemma:
+                        tokens = [morph.parse(word)[0].normal_form for word in tokens]
+                    sentences.append(tokens)
     return sentences
 
 
@@ -30,6 +38,7 @@ def text_to_words(text):
     tokens = word_tokenize(text)
     stop_words = set(stopwords.words("russian"))
     stop_words.update(set(string.punctuation))
+    # return [morph.parse(word)[0].normal_form for word in tokens if word not in stop_words]
     return [word for word in tokens if word not in stop_words]
 
 
@@ -48,8 +57,8 @@ def words_to_vectors(model, words):
     sum_samples = []
     for i, sample in enumerate(words):
         try:
-            vector = model.get_mean_vector(sample[1:], ignore_missing=True)
-            # vector = sum_vectors(sample[1:], model)
+            # vector = model.get_mean_vector(sample[1:], ignore_missing=True)
+            vector = sum_vectors(sample[1:], model)
             if vector is not None:
                 sum_samples.append((i, vector))
         except ValueError as err:
@@ -110,8 +119,8 @@ def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_s
 #       Total: 399/856
 #       Total used words: 116/116
 def main():
-    filename = "ambiguity_filtered_by_3_samples.json"
-    # filename = "homonyms_ru.json"
+    # filename = "ambiguity_filtered_by_3_samples.json"
+    filename = "homonyms_ru.json"
     print(filename)
     with open(filename) as ambiguity_filtered_by_3_samples_json:
         ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
@@ -128,8 +137,6 @@ def main():
         # print(model.get_vector('жалоба'))
         # model.train()
         # model.save("word2vec.model")
-        stemmer = snowballstemmer.stemmer('russian')
-        # print(model.wv[stemmer.stemWords(['дешевый'])[0]])
         compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_samples)
         # print(model.wv['жалоба'])
         # pprint(model.wv.most_similar('жалоба', topn=10))
