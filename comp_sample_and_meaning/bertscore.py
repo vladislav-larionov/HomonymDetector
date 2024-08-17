@@ -79,7 +79,7 @@ def bert_score():
     # filename = "homonyms_ru.json"
     for filename in ["narusco_ru.json", "homonyms_ru.json"]:
         print(f"filename {filename}")
-        with open(f"../{filename}") as ambiguity_filtered_by_3_samples_json:
+        with open(f"../dicts/{filename}") as ambiguity_filtered_by_3_samples_json:
             ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
             valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
             for model in ["cointegrated/rubert-tiny", "cointegrated/rubert-tiny2", "sberbank-ai/sbert_large_nlu_ru",

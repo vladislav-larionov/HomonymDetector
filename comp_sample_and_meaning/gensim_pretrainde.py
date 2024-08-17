@@ -97,7 +97,7 @@ def main():
     # filename = "narusco_ru.json"
     filename = "homonyms_ru.json"
     print(filename)
-    with open(f"../{filename}") as ambiguity_filtered_by_3_samples_json:
+    with open(f"../dicts/{filename}") as ambiguity_filtered_by_3_samples_json:
         ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
         valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
         model = api.load("word2vec-ruscorpora-300")

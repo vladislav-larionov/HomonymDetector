@@ -109,7 +109,7 @@ def navec_score():
     filename = "homonyms_ru.json"
     print("navec_score")
     print(filename)
-    with open(f"../{filename}") as ambiguity_filtered_by_3_samples_json:
+    with open(f"../dicts/{filename}") as ambiguity_filtered_by_3_samples_json:
         ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
         valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
         path = 'models/navec_hudlit_v1_12B_500K_300d_100q.tar'
