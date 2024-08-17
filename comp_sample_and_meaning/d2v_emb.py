@@ -1,17 +1,24 @@
 import json
 import string
+from pprint import pprint
 
-import pymorphy2
-from navec import Navec
-from nltk import word_tokenize, sent_tokenize
+import numpy as np
+import pymorphy3
+
+import snowballstemmer
+from gensim.models import Word2Vec, Phrases
+from gensim.models.keyedvectors import load_word2vec_format, KeyedVectors
+from nltk import sent_tokenize, word_tokenize, WordNetLemmatizer
 from nltk.corpus import stopwords
 
 from io_utils import read_and_filter_words
-from similarity_metrics.cosine import similarity_cosine_numpy
-from w2v_emb import morph
+from similarity_metrics.cosine import similarity_cosine_w2v, similarity_cosine_numpy
+from similarity_metrics.distance_metric import compare_by_sklearn
 
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 
-morph = pymorphy2.MorphAnalyzer()
+morph = pymorphy3.MorphAnalyzer()
+
 
 def get_word_texts_as_sentences(ambiguity_filtered_by_3_samples, words, use_lemma=True, remove_stop_words=True) -> list:
     sentences = []
@@ -46,27 +53,27 @@ def sum_vectors(words, model):
     for word in words:
         if word in model:
             if sample_sum_vec is not None:
-                sample_sum_vec = sample_sum_vec + model.get(word)
+                sample_sum_vec = np.add(sample_sum_vec, model.get_vector(word))
             else:
-                sample_sum_vec = model.get(word)
+                sample_sum_vec = model.get_vector(word)
     return sample_sum_vec
 
 
-def words_to_vectors(model, words):
+def words_to_vectors(model: Doc2Vec, words):
     sum_samples = []
     for i, sample in enumerate(words):
         try:
-            # vector = model.get_mean_vector(sample, ignore_missing=True)
-            vector = sum_vectors(sample, model)
+            vector = model.infer_vector(sample)
             if vector is not None:
                 sum_samples.append((i, vector))
         except ValueError as err:
-            print(sample)
+            print("words_to_vectors " + "" + str(sample))
+            print(err)
     return sum_samples
 
 
-def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_samples, use_lemma=True, remove_stop_words=True, log=False):
-    # similarity_metrics(model.wv['space'], model.wv['france'])
+def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_samples, use_lemma=True,
+                                   remove_stop_words=True, log=False, metric="euclidean"):
     total = 0
     total_word = 0
     total_used_word = 0
@@ -86,7 +93,7 @@ def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_s
                 if log:
                     print("Слово: ", word)
                     print("Пример: ", word_data['samples'][sample[0]]['text'])
-                meaning = list(sorted(sum_meanings, key=lambda _meaning: similarity_cosine_numpy(sample[1], _meaning[1])))[0]
+                meaning = list(sorted(sum_meanings, key=lambda _meaning: compare_by_sklearn(sample[1], _meaning[1], metric=metric)))[0]
                 if log:
                     print("Значение: ", word_data['meanings'][meaning[0]]['определение'])
                     print("Верное значение: ", word_data['meanings'][word_data['samples'][sample[0]]['meaning']]['определение'])
@@ -99,33 +106,37 @@ def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_s
             total_used_word += 1
         if log:
             print("__________________________________")
-    print(f"Total: {right}/{total}")
+    print(f"Total: {right}/{total} {right/total:.4f}")
     print(f"Total used words: {total_used_word}/{total_word}")
 
 
-
-def navec_score():
-    # filename = "ambiguity_filtered_by_3_samples.json"
-    filename = "homonyms_ru.json"
-    print("navec_score")
+def main():
+    filename = "narusco_ru.json"
+    # filename = "homonyms_ru.json"
     print(filename)
-    with open(filename) as ambiguity_filtered_by_3_samples_json:
+    with open(f"../{filename}") as ambiguity_filtered_by_3_samples_json:
         ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
         valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
-        path = 'models/navec_hudlit_v1_12B_500K_300d_100q.tar'
-        navec = Navec.load(path)
-        param_list = [
-            dict(use_lemma=False, remove_stop_words=False),
-            dict(use_lemma=True, remove_stop_words=False),
-            dict(use_lemma=False, remove_stop_words=True),
-            dict(use_lemma=True, remove_stop_words=True),
-        ]
-        for params in param_list:
-            print(f"use_lemma = {params['use_lemma']}")
-            print(f"remove_stop_words = {params['remove_stop_words']}")
-            compare_with_cosine_similarity(navec, valid_words, ambiguity_filtered_by_3_samples, **params)
-            print()
+        for metric in ["euclidean",
+                       "manhattan", "minkowski", "hamming", "canberra", "braycurtis"
+                       ]:
+            param_list = [
+                dict(use_lemma=False, remove_stop_words=False),
+                dict(use_lemma=True, remove_stop_words=False),
+                dict(use_lemma=False, remove_stop_words=True),
+                dict(use_lemma=True, remove_stop_words=True),
+            ]
+            for params in param_list:
+                sentences = get_word_texts_as_sentences(ambiguity_filtered_by_3_samples, valid_words, **params)
+                documents = [TaggedDocument(doc, [i]) for i, doc in enumerate(sentences)]
+                model = Doc2Vec(documents, vector_size=5, window=2, min_count=1, workers=4)
+
+                print(f"metric = {metric}")
+                print(f"use_lemma = {params['use_lemma']}")
+                print(f"remove_stop_words = {params['remove_stop_words']}")
+                compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_samples, metric=metric, **params)
+                print()
 
 
 if __name__ == "__main__":
-    navec_score()
+    main()
