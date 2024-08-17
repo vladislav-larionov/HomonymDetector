@@ -5,6 +5,7 @@ from transformers import AutoTokenizer, AutoModel
 
 from io_utils import read_and_filter_words
 from similarity_metrics.cosine import similarity_cosine_w2v, similarity_cosine_numpy
+from similarity_metrics.distance_metric import compare_by_sklearn
 
 
 def create_model_and_tokenizer(model_name):
@@ -35,7 +36,7 @@ def texts_to_vectors(texts, model, tokenizer):
     return sum_samples
 
 
-def compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples, model_name, log=False):
+def compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples, model_name, metric="euclidean", log=False):
     model, tokenizer = create_model_and_tokenizer(model_name)
     total = 0
     total_word = 0
@@ -56,7 +57,7 @@ def compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples,
                 if log:
                     print("Слово: ", word)
                     print("Пример: ", word_data['samples'][sample[0]]['text'])
-                meaning = list(sorted(sum_meanings, key=lambda _meaning: similarity_cosine_numpy(sample[1], _meaning[1])))[0]
+                meaning = list(sorted(sum_meanings, key=lambda _meaning: compare_by_sklearn(sample[1], _meaning[1], metric=metric)))[0]
                 if log:
                     print("Значение: ", word_data['meanings'][meaning[0]]['определение'])
                     print("Верное значение: ", word_data['meanings'][word_data['samples'][sample[0]]['meaning']]['определение'])
@@ -73,59 +74,23 @@ def compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples,
     print(f"Total used words: {total_used_word}/{total_word}")
 
 
-# cointegrated/rubert-tiny
-#    ambiguity_filtered_by_3_samples
-#       Total: 139/522
-#       Total used words: 32/32
-#    homonyms_ru
-#       Total: 309/859
-#       Total used words: 116/116
-# cointegrated/rubert-tiny2
-#    ambiguity_filtered_by_3_samples
-#       Total: 83/522
-#       Total used words: 32/32
-#    homonyms_ru
-#       Total: 239/859
-#       Total used words: 116/116
-# sberbank-ai/sbert_large_nlu_ru
-#    ambiguity_filtered_by_3_samples
-#       Total: 115/522
-#       Total used words: 32/32
-#    homonyms_ru
-#       Total: 238/859
-#       Total used words: 116/116
-# DeepPavlov/rubert-base-cased-sentence
-#    ambiguity_filtered_by_3_samples
-#       Total: 119/522
-#       Total used words: 32/32
-#    homonyms_ru
-#       Total: 226/859
-#       Total used words: 116/116
-# DeepPavlov/rubert-base-cased  Some weights of the model checkpoint
-#    ambiguity_filtered_by_3_samples
-#       Total: 113/522
-#       Total used words: 32/32
-#    homonyms_ru
-#       Total: 353/859
-#       Total used words: 116/116
-# inkoziev/sbert_synonymy
-#    ambiguity_filtered_by_3_samples
-#       Total: 187/522
-#       Total used words: 32/32
-#    homonyms_ru
-#       Total: 293/859
-#       Total used words: 116/116
-
 def bert_score():
-    # filename = "ambiguity_filtered_by_3_samples.json"
-    filename = "homonyms_ru.json"
-    print("bert_score")
-    print(filename)
-    with open(filename) as ambiguity_filtered_by_3_samples_json:
-        ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
-        valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
-        print(f"Valid number {len(valid_words)}")
-        compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples, "ai-forever/rugpt3large_based_on_gpt2")
+    filename = "narusco_ru.json"
+    # filename = "homonyms_ru.json"
+    for filename in ["narusco_ru.json", "homonyms_ru.json"]:
+        print(f"filename {filename}")
+        with open(filename) as ambiguity_filtered_by_3_samples_json:
+            ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
+            valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
+            for model in ["cointegrated/rubert-tiny", "cointegrated/rubert-tiny2", "sberbank-ai/sbert_large_nlu_ru",
+                          "DeepPavlov/rubert-base-cased-sentence", "DeepPavlov/rubert-base-cased",
+                          "inkoziev/sbert_synonymy"]:
+
+                for metric in ["euclidean", "manhattan", "minkowski", "hamming", "canberra", "braycurtis"]:
+                    print(f"model {model}")
+                    print(f"metric {metric}")
+                    compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples, model, metric=metric)
+                    print()
 
 
 if __name__ == "__main__":

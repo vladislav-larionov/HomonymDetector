@@ -46,8 +46,8 @@ def join_rusentilex_json_with_samples():
             f.write(json.dumps(ambiguity_samples, indent=4, ensure_ascii=False))
 
 
-def filter_rusentilex_json_by_sample_count(count):
-    with open('ambiguity_samples.json') as ambiguity_samples_json:
+def filter_rusentilex_json_by_sample_count(filename, count):
+    with open(filename) as ambiguity_samples_json:
         filtered_ambiguity_samples = dict()
         ambiguity_samples = json.load(ambiguity_samples_json)
         for word in ambiguity_samples.keys():
@@ -61,9 +61,29 @@ def filter_rusentilex_json_by_sample_count(count):
                 for index, meaning in enumerate(filtered_ambiguity_samples[word]["meanings"]):
                     meaning["valid"] = True
                     meaning["index"] = index
-        with open(f'ambiguity_filtered_by_{count}_samples.json', 'w') as f:
+        with open(f'{filename.replace(".json", "")}_filtered_by_{count}_samples.json', 'w') as f:
+            f.write(json.dumps(filtered_ambiguity_samples, indent=4, ensure_ascii=False))
+
+def filter_json_dict_by_meaning_statrs_with_keyword(filename, keyword):
+    with open(filename) as ambiguity_samples_json:
+        filtered_ambiguity_samples = dict()
+        ambiguity_samples = json.load(ambiguity_samples_json)
+        for word in ambiguity_samples.keys():
+            meanings = list(filter(lambda meaning: not meaning["определение"].startswith(keyword), ambiguity_samples[word]['meanings']))
+            ambiguity_samples[word]['meanings'] = meanings
+            if len(meanings) >= 2:
+                filtered_ambiguity_samples[word] = dict()
+                filtered_ambiguity_samples[word]["valid"] = True
+                filtered_ambiguity_samples[word].update(ambiguity_samples[word])
+                for sample in filtered_ambiguity_samples[word]["samples"]:
+                    sample["valid"] = True
+                    sample["text"] = sample["text"].replace("_", " ")
+                for index, meaning in enumerate(filtered_ambiguity_samples[word]["meanings"]):
+                    meaning["valid"] = True
+                    meaning["index"] = index
+        with open(f'{filename.replace(".json", "")}_filtered_by_keyword_samples.json', 'w') as f:
             f.write(json.dumps(filtered_ambiguity_samples, indent=4, ensure_ascii=False))
 
 
 if __name__ == "__main__":
-    filter_rusentilex_json_by_sample_count(3)
+    filter_json_dict_by_meaning_statrs_with_keyword('homonyms_ru_filtered_by_keyword_samples.json', 'форма ')
