@@ -25,14 +25,13 @@ def get_word_texts_as_sentences(ambiguity_filtered_by_3_samples, words, use_lemm
     stop_words.update(set(string.punctuation))
     for word in words:
         for sample in ambiguity_filtered_by_3_samples[word]["samples"]:
-            if sample["адекватность"] and sample["meaning"] is not None:
-                for sent in sent_tokenize(sample["text"]):
-                    tokens = word_tokenize(sent)
-                    if remove_stop_words:
-                        tokens = [word for word in tokens if word not in stop_words]
-                    if use_lemma:
-                        tokens = [morph.parse(word)[0].normal_form for word in tokens]
-                    sentences.append(tokens)
+            for sent in sent_tokenize(sample["text"]):
+                tokens = word_tokenize(sent)
+                if remove_stop_words:
+                    tokens = [word for word in tokens if word not in stop_words]
+                if use_lemma:
+                    tokens = [morph.parse(word)[0].normal_form for word in tokens]
+                sentences.append(tokens)
     return sentences
 
 
@@ -89,7 +88,7 @@ def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_s
         sum_meanings = words_to_vectors(model, meanings, mean=vect_act_mean)
         used = False
         for i, sample in enumerate(sum_samples):
-            if sum_meanings and word_data['samples'][i]["адекватность"] and word_data['samples'][i]["meaning"] is not None:
+            if sum_meanings:
                 total += 1
                 used = True
                 if log:
@@ -108,13 +107,12 @@ def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_s
             total_used_word += 1
         if log:
             print("__________________________________")
-    print(f"Total: {right}/{total}")
+    print(f"Total: {right}/{total} {right/total:.4f}")
     print(f"Total used words: {total_used_word}/{total_word}")
 
 
-def main():
-    filename = "narusco_ru.json"
-    # filename = "homonyms_ru.json"
+def w2v_emb(filename):
+    print("Method w2v_emb")
     print(filename)
     with open(f"../dicts/{filename}") as ambiguity_filtered_by_3_samples_json:
         ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
@@ -143,6 +141,14 @@ def main():
                 compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_samples,
                                                vect_act_mean=vect_act_mean, metric=metric, **params)
                 print()
+    print("________________________________________")
+
+
+def main():
+    filename = "homonyms_with_50_samples.json"
+    # filename = "narusco_ru.json"
+    # filename = "homonyms_ru.json"
+    w2v_emb(filename)
 
 
 if __name__ == "__main__":

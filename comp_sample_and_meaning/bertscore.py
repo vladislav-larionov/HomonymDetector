@@ -51,7 +51,7 @@ def compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples,
         sum_meanings = texts_to_vectors(meanings, model, tokenizer)
         used = False
         for i, sample in enumerate(sum_samples):
-            if sum_meanings and word_data['samples'][i]["адекватность"] and word_data['samples'][i]["meaning"] is not None:
+            if sum_meanings:
                 total += 1
                 used = True
                 if log:
@@ -70,28 +70,32 @@ def compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples,
             total_used_word += 1
         if log:
             print("__________________________________")
-    print(f"Total: {right}/{total}")
+    print(f"Total: {right}/{total} {right/total:.4f}")
     print(f"Total used words: {total_used_word}/{total_word}")
 
 
-def bert_score():
-    filename = "narusco_ru.json"
+def bert_score(filename):
+    print("bert_score")
+    print(filename)
+    with open(f"../dicts/{filename}") as ambiguity_filtered_by_3_samples_json:
+        ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
+        valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
+        for model in ["cointegrated/rubert-tiny", "cointegrated/rubert-tiny2", "sberbank-ai/sbert_large_nlu_ru",
+                      "DeepPavlov/rubert-base-cased-sentence", "DeepPavlov/rubert-base-cased",
+                      "inkoziev/sbert_synonymy"]:
+
+            for metric in ["euclidean", "manhattan", "minkowski", "hamming", "canberra", "braycurtis"]:
+                print(f"model {model}")
+                print(f"metric {metric}")
+                compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples, model, metric=metric)
+                print()
+
+
+def main():
+    filename = "homonyms_with_50_samples.json"
+    # filename = "narusco_ru.json"
     # filename = "homonyms_ru.json"
-    for filename in ["narusco_ru.json", "homonyms_ru.json"]:
-        print(f"filename {filename}")
-        with open(f"../dicts/{filename}") as ambiguity_filtered_by_3_samples_json:
-            ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
-            valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
-            for model in ["cointegrated/rubert-tiny", "cointegrated/rubert-tiny2", "sberbank-ai/sbert_large_nlu_ru",
-                          "DeepPavlov/rubert-base-cased-sentence", "DeepPavlov/rubert-base-cased",
-                          "inkoziev/sbert_synonymy"]:
-
-                for metric in ["euclidean", "manhattan", "minkowski", "hamming", "canberra", "braycurtis"]:
-                    print(f"model {model}")
-                    print(f"metric {metric}")
-                    compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples, model, metric=metric)
-                    print()
-
+    bert_score(filename)
 
 if __name__ == "__main__":
-    bert_score()
+    main()

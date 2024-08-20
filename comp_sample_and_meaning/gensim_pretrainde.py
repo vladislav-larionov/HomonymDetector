@@ -5,7 +5,7 @@ import string
 from pprint import pprint
 
 import numpy as np
-import pymorphy2
+import pymorphy3
 
 import snowballstemmer
 from gensim.models import Word2Vec, Phrases
@@ -18,7 +18,7 @@ from similarity_metrics.cosine import similarity_cosine_w2v, similarity_cosine_n
 from similarity_metrics.distance_metric import compare_by_sklearn
 
 
-morph = pymorphy2.MorphAnalyzer()
+morph = pymorphy3.MorphAnalyzer()
 
 def text_to_words(text, use_lemma=True, remove_stop_words=True):
     tokens = word_tokenize(text)
@@ -70,7 +70,7 @@ def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_s
         sum_meanings = words_to_vectors(model, meanings)
         used = False
         for i, sample in enumerate(sum_samples):
-            if sum_meanings and word_data['samples'][i]["адекватность"] and word_data['samples'][i]["meaning"] is not None:
+            if sum_meanings:
                 total += 1
                 used = True
                 if log:
@@ -89,18 +89,18 @@ def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_s
             total_used_word += 1
         if log:
             print("__________________________________")
-    print(f"Total: {right}/{total}")
+    print(f"Total: {right}/{total} {right/total:.4f}")
     print(f"Total used words: {total_used_word}/{total_word}")
 
 
-def main():
-    # filename = "narusco_ru.json"
-    filename = "homonyms_ru.json"
+def gensim_pretrainde(filename):
+    print("gensim_pretrainde")
     print(filename)
     with open(f"../dicts/{filename}") as ambiguity_filtered_by_3_samples_json:
         ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
         valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
         model = api.load("word2vec-ruscorpora-300")
+        print("Model: word2vec-ruscorpora-300")
         for metric in ["euclidean", "manhattan", "minkowski", "hamming", "canberra", "braycurtis"]:
             param_list = [
                 dict(use_lemma=False, remove_stop_words=False),
@@ -119,6 +119,14 @@ def main():
                     print("sum_vectors")
                 compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_samples, vect_act_mean=vect_act_mean, metric=metric, **params)
                 print()
+    print("________________________________________")
+
+
+def main():
+    filename = "homonyms_with_50_samples.json"
+    # filename = "narusco_ru.json"
+    # filename = "homonyms_ru.json"
+    gensim_pretrainde(filename)
 
 
 if __name__ == "__main__":

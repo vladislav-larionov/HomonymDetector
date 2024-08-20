@@ -1,17 +1,16 @@
 import json
 import string
 
-import pymorphy2
+import pymorphy3
 from navec import Navec
 from nltk import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 
 from io_utils import read_and_filter_words
 from similarity_metrics.cosine import similarity_cosine_numpy
-from w2v_emb import morph
 
 
-morph = pymorphy2.MorphAnalyzer()
+morph = pymorphy3.MorphAnalyzer()
 
 def get_word_texts_as_sentences(ambiguity_filtered_by_3_samples, words, use_lemma=True, remove_stop_words=True) -> list:
     sentences = []
@@ -80,7 +79,7 @@ def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_s
         sum_meanings = words_to_vectors(model, meanings)
         used = False
         for i, sample in enumerate(sum_samples):
-            if sum_meanings and word_data['samples'][i]["адекватность"] and word_data['samples'][i]["meaning"] is not None:
+            if sum_meanings:
                 total += 1
                 used = True
                 if log:
@@ -99,20 +98,17 @@ def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_s
             total_used_word += 1
         if log:
             print("__________________________________")
-    print(f"Total: {right}/{total}")
+    print(f"Total: {right}/{total} {right/total:.4f}")
     print(f"Total used words: {total_used_word}/{total_word}")
 
 
-
-def navec_score():
-    # filename = "ambiguity_filtered_by_3_samples.json"
-    filename = "homonyms_ru.json"
+def navec_score(filename):
     print("navec_score")
     print(filename)
     with open(f"../dicts/{filename}") as ambiguity_filtered_by_3_samples_json:
         ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
         valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
-        path = 'models/navec_hudlit_v1_12B_500K_300d_100q.tar'
+        path = '../models/navec_hudlit_v1_12B_500K_300d_100q.tar'
         navec = Navec.load(path)
         param_list = [
             dict(use_lemma=False, remove_stop_words=False),
@@ -125,7 +121,14 @@ def navec_score():
             print(f"remove_stop_words = {params['remove_stop_words']}")
             compare_with_cosine_similarity(navec, valid_words, ambiguity_filtered_by_3_samples, **params)
             print()
+    print("________________________________________")
 
+
+def main():
+    filename = "homonyms_with_50_samples.json"
+    # filename = "narusco_ru.json"
+    # filename = "homonyms_ru.json"
+    navec_score(filename)
 
 if __name__ == "__main__":
-    navec_score()
+    main()
