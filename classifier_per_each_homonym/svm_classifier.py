@@ -65,6 +65,7 @@ def create_vectorizor(x_train, model_type=None):
     # vectorizors.append(StandardScaler())
 
     # print("Model: BertTransformerEmbedding + cointegrated/rubert-tiny2")
+    # sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
     # cointegrated/rubert-tiny2
     # cointegrated/rubert-tiny
     model = BertTransformerEmbedding("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")

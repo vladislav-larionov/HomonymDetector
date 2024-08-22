@@ -80,9 +80,11 @@ def bert_score(filename):
     with open(f"../dicts/{filename}") as ambiguity_filtered_by_3_samples_json:
         ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
         valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
-        for model in ["cointegrated/rubert-tiny", "cointegrated/rubert-tiny2", "sberbank-ai/sbert_large_nlu_ru",
-                      "DeepPavlov/rubert-base-cased-sentence", "DeepPavlov/rubert-base-cased",
-                      "inkoziev/sbert_synonymy"]:
+        for model in [
+            "cointegrated/rubert-tiny", "cointegrated/rubert-tiny2", "sberbank-ai/sbert_large_nlu_ru",
+            "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "DeepPavlov/rubert-base-cased-sentence",
+            "DeepPavlov/rubert-base-cased", "inkoziev/sbert_synonymy"
+        ]:
 
             for metric in ["euclidean", "manhattan", "minkowski", "hamming", "canberra", "braycurtis"]:
                 print(f"model {model}")
