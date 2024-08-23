@@ -58,23 +58,28 @@ def group_samples_by_meaning(samples: list):
     return res
 
 
-def create_vectorizor(x_train, model_type=None):
-    # print("Model: Word2Vec + MeanEmbeddingVectorizer + StandardScaler")
-    # model = Word2Vec(x_train, vector_size=70, window=8, sg=1, epochs=15, workers=4)
-    # vectorizors = [MeanEmbeddingVectorizer(model)]
-    # vectorizors.append(StandardScaler())
+def create_vectorizor(x_train):
+    model_type = "bert"
+    vectorizors = []
+    if model_type == "w2v":
+        print("Model: Word2Vec + MeanEmbeddingVectorizer + StandardScaler")
+        model = Word2Vec(x_train, vector_size=70, window=8, sg=1, epochs=15, workers=4)
+        vectorizors.append(MeanEmbeddingVectorizer(model))
+        vectorizors.append(StandardScaler())
 
-    # print("Model: BertTransformerEmbedding + cointegrated/rubert-tiny2")
-    # sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
-    # cointegrated/rubert-tiny2
-    # cointegrated/rubert-tiny
-    model = BertTransformerEmbedding("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
-    vectorizors = [model]
+    if model_type == "bert":
+        # print("Model: BertTransformerEmbedding + cointegrated/rubert-tiny2")
+        # sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+        # cointegrated/rubert-tiny2
+        # cointegrated/rubert-tiny
+        model = BertTransformerEmbedding("cointegrated/rubert-tiny")
+        vectorizors.append(model)
 
+    if model_type == "tfidf":
     # print("Model: TfidfVectorizer")
-    # model = TfidfVectorizer()
-    # model.fit(x_train)
-    # vectorizors = [model]
+        model = TfidfVectorizer()
+        model.fit(x_train)
+        vectorizors.append(model)
 
     return vectorizors
 
