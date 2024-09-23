@@ -9,7 +9,6 @@ def main():
     filename = "homonyms_with_50_samples.json"
     # filename = "narusco_ru.json"
     # filename = "homonyms_ru.json"
-    # filename = "rusentilex.json"
     w2v_emb(filename)
     navec_score(filename)
     gensim_pretrainde(filename)
