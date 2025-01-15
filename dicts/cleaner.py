@@ -9,6 +9,7 @@ def remove_samples_with_no_meaning(hom_dictionary: dict):
         cleaned_word["samples"] = []
         for sample in word_data["samples"]:
             if sample["meaning"] is not None:
+                sample = dict(text=sample["text"], meaning=sample["meaning"])
                 cleaned_word["samples"].append(sample)
         if len(cleaned_word["samples"]):
             cleaned[word] = cleaned_word
@@ -22,6 +23,7 @@ def remove_meaning_with_no_samples(hom_dictionary: dict):
         cleaned_word["meanings"] = []
         for meaning in word_data["meanings"]:
             if len(list(filter(lambda sample: sample["meaning"] == meaning["index"], cleaned_word["samples"]))) > 0:
+                meaning = {"определение": meaning["определение"], "index": meaning["index"]}
                 cleaned_word["meanings"].append(meaning)
         if len(cleaned_word["meanings"]) > 1:
             cleaned[word] = cleaned_word
@@ -29,7 +31,7 @@ def remove_meaning_with_no_samples(hom_dictionary: dict):
 
 
 def main():
-    print(f"file: {sys.argv[0]}")
+    print(f"file: {sys.argv[1]}")
     filename = sys.argv[1]
     with open(filename) as source_file:
         hom_dictionary = json.load(source_file)

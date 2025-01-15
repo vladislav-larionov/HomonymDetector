@@ -6,14 +6,19 @@ from comp_sample_and_meaning.w2v_emb import w2v_emb
 
 
 def main():
-    filename = "homonyms_with_50_samples.json"
+    # filename = "homonyms_with_50_samples.json"
     # filename = "narusco_ru.json"
-    # filename = "homonyms_ru.json"
-    w2v_emb(filename)
-    navec_score(filename)
-    gensim_pretrainde(filename)
-    d2v_emb(filename)
-    bert_score(filename)
+    filename = "homonyms_ru.json"
+    filename = "homonyms_ru_clean.json"
+    with open("../results/comp_sample_and_meaning/res_total.md", "w") as file:
+        print(f"# {__file__}\n", file=file)
+        for filename in ["homonyms_ru_clean.json", "homonyms_ru_dirty.json", "homonyms_with_50_samples.json"]:
+            print(f"Корпус {filename}\n", file=file)
+            w2v_emb(filename, file=file)
+            navec_score(filename, file=file)
+            gensim_pretrainde(filename, file=file)
+            d2v_emb(filename, file=file)
+            bert_score(filename, file=file)
 
 
 if __name__ == "__main__":

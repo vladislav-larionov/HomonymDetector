@@ -72,7 +72,7 @@ def create_vectorizor(x_train):
         # sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
         # cointegrated/rubert-tiny2
         # cointegrated/rubert-tiny
-        model = BertTransformerEmbedding("cointegrated/rubert-tiny")
+        model = BertTransformerEmbedding("cointegrated/rubert-tiny2")
         vectorizors.append(model)
 
     if model_type == "tfidf":
@@ -89,99 +89,99 @@ def full_classifier_list():
         (SVC(), f'SVM kernel=rbf'),
         (SVC(kernel='linear'), f'SVM linear'),
         (SVC(kernel='poly'), f'SVM kernel=poly'),
-        (SVC(kernel='poly', coef0=0.75), f'SVM kernel=poly coef0=0.75'),
-        (SVC(gamma=1), f'SVM kernel=rbf gamma=1'),
-        (SVC(gamma=1, C=10), f'SVM kernel=rbf gamma=1 C=10'),
-        (SVC(gamma=0.75, C=10), f'SVM kernel=rbf gamma=0.75 C=10'),
+        # (SVC(kernel='poly', coef0=0.75), f'SVM kernel=poly coef0=0.75'),
+        # (SVC(gamma=1), f'SVM kernel=rbf gamma=1'),
+        # (SVC(gamma=1, C=10), f'SVM kernel=rbf gamma=1 C=10'),
+        # (SVC(gamma=0.75, C=10), f'SVM kernel=rbf gamma=0.75 C=10'),
         (SVC(kernel='poly', degree=4, coef0=0.75), f'SVM kernel=poly degree=4 coef0=0.75'),
-        (SVC(kernel='poly', degree=4, coef0=0.7), f'SVM kernel=poly degree=4 coef0=0.7'),
-        (SVC(kernel='poly', degree=4, coef0=0.7, gamma=1, C=0.1),
-                       f'SVM kernel=poly degree=4 coef0=0.7 gamma=1 C=0.1'),
-         (SVC(degree=5, coef0=0.75, C=10), f'SVM kernel=rbf degree=5 coef0=0.75, C=10'),
-         (SVC(degree=5, coef0=0.2), f'SVM kernel=rbf degree=5 coef0=0.2'),
-         (SVC(kernel='poly', degree=5), f'SVM kernel=poly degree=5'),
-         (SVC(kernel='poly', degree=5, coef0=0.65), f'SVM kernel=poly degree=5 coef0=0.65'),
-         (SVC(kernel='poly', degree=5, coef0=0.75), f'SVM kernel=poly degree=5 coef0=0.75'),
-         (SVC(kernel='poly', degree=5, coef0=0.7), f'SVM kernel=poly degree=5 coef0=0.7'),
-         (SVC(kernel='poly', degree=6), f'SVM kernel=poly degree=6'),
-         (SVC(kernel='poly', degree=6, coef0=0.75), f'SVM kernel=poly degree=6 coef0=0.75'),
-         (SVC(kernel='poly', degree=6, coef0=0.7), f'SVM kernel=poly degree=6 coef0=0.7'),
-         (SVC(class_weight='balanced', ), f'SVM class_weight=balanced kernel=rbf'),
+        # # (SVC(kernel='poly', degree=4, coef0=0.7), f'SVM kernel=poly degree=4 coef0=0.7'),
+        # (SVC(kernel='poly', degree=4, coef0=0.7, gamma=1, C=0.1),
+        #                f'SVM kernel=poly degree=4 coef0=0.7 gamma=1 C=0.1'),
+        #  (SVC(degree=5, coef0=0.75, C=10), f'SVM kernel=rbf degree=5 coef0=0.75, C=10'),
+        #  (SVC(degree=5, coef0=0.2), f'SVM kernel=rbf degree=5 coef0=0.2'),
+        #  (SVC(kernel='poly', degree=5), f'SVM kernel=poly degree=5'),
+        #  (SVC(kernel='poly', degree=5, coef0=0.65), f'SVM kernel=poly degree=5 coef0=0.65'),
+        #  # (SVC(kernel='poly', degree=5, coef0=0.75), f'SVM kernel=poly degree=5 coef0=0.75'),
+        #  (SVC(kernel='poly', degree=5, coef0=0.7), f'SVM kernel=poly degree=5 coef0=0.7'),
+        #  (SVC(kernel='poly', degree=6), f'SVM kernel=poly degree=6'),
+        #  (SVC(kernel='poly', degree=6, coef0=0.75), f'SVM kernel=poly degree=6 coef0=0.75'),
+        #  (SVC(kernel='poly', degree=6, coef0=0.7), f'SVM kernel=poly degree=6 coef0=0.7'),
+        #  (SVC(class_weight='balanced', ), f'SVM class_weight=balanced kernel=rbf'),
          (SVC(class_weight='balanced', kernel='linear'), f'SVM class_weight=balanced linear'),
-         (SVC(class_weight='balanced', kernel='poly'), f'SVM class_weight=balanced kernel=poly'),
+        #  (SVC(class_weight='balanced', kernel='poly'), f'SVM class_weight=balanced kernel=poly'),
          (SVC(class_weight='balanced', kernel='poly', coef0=0.75), f'SVM class_weight=balanced kernel=poly coef0=0.75'),
-         (SVC(class_weight='balanced', gamma=1), f'SVM class_weight=balanced kernel=rbf gamma=1'),
-         (SVC(class_weight='balanced', gamma=1, C=10), f'SVM class_weight=balanced kernel=rbf gamma=1 C=10'),
-         (SVC(class_weight='balanced', gamma=0.75, C=10), f'SVM class_weight=balanced kernel=rbf gamma=0.75 C=10'),
-         (SVC(class_weight='balanced', kernel='poly', degree=4, coef0=0.75),
-          f'SVM class_weight=balanced kernel=poly degree=4 coef0=0.75'),
-         (SVC(class_weight='balanced', kernel='poly', degree=4, coef0=0.7),
-          f'SVM class_weight=balanced kernel=poly degree=4 coef0=0.7'),
-         (SVC(class_weight='balanced', kernel='poly', degree=4, coef0=0.7, gamma=1, C=0.1),
-                        f'SVM class_weight=balanced kernel=poly degree=4 coef0=0.7 gamma=1 C=0.1'),
-          (SVC(class_weight='balanced', degree=5, coef0=0.75, C=10),
-           f'SVM class_weight=balanced kernel=rbf degree=5 coef0=0.75, C=10'),
-          (SVC(class_weight='balanced', degree=5, coef0=0.2),
-           f'SVM class_weight=balanced kernel=rbf degree=5 coef0=0.2'),
-          (SVC(class_weight='balanced', kernel='poly', degree=5),
-           f'SVM class_weight=balanced kernel=poly degree=5'),
-          (SVC(class_weight='balanced', kernel='poly', degree=5, coef0=0.65),
-           f'SVM class_weight=balanced kernel=poly degree=5 coef0=0.65'),
-          (SVC(class_weight='balanced', kernel='poly', degree=5, coef0=0.75),
-           f'SVM class_weight=balanced kernel=poly degree=5 coef0=0.75'),
-          (SVC(class_weight='balanced', kernel='poly', degree=5, coef0=0.7),
-           f'SVM class_weight=balanced kernel=poly degree=5 coef0=0.7'),
-          (SVC(class_weight='balanced', kernel='poly', degree=6),
-           f'SVM class_weight=balanced kernel=poly degree=6'),
-          (SVC(class_weight='balanced', kernel='poly', degree=6, coef0=0.75),
-           f'SVM class_weight=balanced kernel=poly degree=6 coef0=0.75'),
-          (SVC(class_weight='balanced', kernel='poly', degree=6, coef0=0.7),
-           f'SVM class_weight=balanced kernel=poly degree=6 coef0=0.7'),
-          (KNeighborsClassifier(), 'KNeighbors'),
-          (KNeighborsClassifier(weights='distance'),
-           'KNeighbors weights=distance'),
-          (ExtraTreesClassifier(class_weight='balanced', n_estimators=500),
-           f'ExtraTreesClassifier class_weight=balanced n_estimators=500'),
-          (
-              RandomForestClassifier(class_weight='balanced', ), f'RandomForest'),
-          (
-              RandomForestClassifier(bootstrap=False), f'RandomForest bootstrap=False'),
-          (
-              RandomForestClassifier(max_features=None), f'RandomForest max_features=None'),
-          (
-              RandomForestClassifier(criterion='entropy'), f'RandomForest entropy'),
-          (
-              RandomForestClassifier(criterion='entropy', max_features=None),
-              f'RandomForest entropy max_features=None'),
+        #  (SVC(class_weight='balanced', gamma=1), f'SVM class_weight=balanced kernel=rbf gamma=1'),
+        #  (SVC(class_weight='balanced', gamma=1, C=10), f'SVM class_weight=balanced kernel=rbf gamma=1 C=10'),
+        #  (SVC(class_weight='balanced', gamma=0.75, C=10), f'SVM class_weight=balanced kernel=rbf gamma=0.75 C=10'),
+        #  (SVC(class_weight='balanced', kernel='poly', degree=4, coef0=0.75),
+        #   f'SVM class_weight=balanced kernel=poly degree=4 coef0=0.75'),
+        #  (SVC(class_weight='balanced', kernel='poly', degree=4, coef0=0.7),
+        #   f'SVM class_weight=balanced kernel=poly degree=4 coef0=0.7'),
+        #  (SVC(class_weight='balanced', kernel='poly', degree=4, coef0=0.7, gamma=1, C=0.1),
+        #                 f'SVM class_weight=balanced kernel=poly degree=4 coef0=0.7 gamma=1 C=0.1'),
+        #   (SVC(class_weight='balanced', degree=5, coef0=0.75, C=10),
+        #    f'SVM class_weight=balanced kernel=rbf degree=5 coef0=0.75, C=10'),
+        #   (SVC(class_weight='balanced', degree=5, coef0=0.2),
+        #    f'SVM class_weight=balanced kernel=rbf degree=5 coef0=0.2'),
+        #   (SVC(class_weight='balanced', kernel='poly', degree=5),
+        #    f'SVM class_weight=balanced kernel=poly degree=5'),
+        #   (SVC(class_weight='balanced', kernel='poly', degree=5, coef0=0.65),
+        #    f'SVM class_weight=balanced kernel=poly degree=5 coef0=0.65'),
+        #   (SVC(class_weight='balanced', kernel='poly', degree=5, coef0=0.75),
+        #    f'SVM class_weight=balanced kernel=poly degree=5 coef0=0.75'),
+        #   (SVC(class_weight='balanced', kernel='poly', degree=5, coef0=0.7),
+        #    f'SVM class_weight=balanced kernel=poly degree=5 coef0=0.7'),
+        #   (SVC(class_weight='balanced', kernel='poly', degree=6),
+        #    f'SVM class_weight=balanced kernel=poly degree=6'),
+        #   (SVC(class_weight='balanced', kernel='poly', degree=6, coef0=0.75),
+        #    f'SVM class_weight=balanced kernel=poly degree=6 coef0=0.75'),
+        #   (SVC(class_weight='balanced', kernel='poly', degree=6, coef0=0.7),
+        #    f'SVM class_weight=balanced kernel=poly degree=6 coef0=0.7'),
+        #   # (KNeighborsClassifier(), 'KNeighbors'),
+        #   # (KNeighborsClassifier(weights='distance'),
+        #   #  'KNeighbors weights=distance'),
+        #   (ExtraTreesClassifier(class_weight='balanced', n_estimators=500),
+        #    f'ExtraTreesClassifier class_weight=balanced n_estimators=500'),
+        #   (
+        #       RandomForestClassifier(class_weight='balanced', ), f'RandomForest'),
+        #   (
+        #       RandomForestClassifier(bootstrap=False), f'RandomForest bootstrap=False'),
+        #   (
+        #       RandomForestClassifier(max_features=None), f'RandomForest max_features=None'),
+        #   (
+        #       RandomForestClassifier(criterion='entropy'), f'RandomForest entropy'),
+        #   (
+        #       RandomForestClassifier(criterion='entropy', max_features=None),
+        #       f'RandomForest entropy max_features=None'),
           (
               RandomForestClassifier(criterion='entropy', max_features='log2'),
               f'RandomForest entropy max_features=log2'),
-          (
-              RandomForestClassifier(criterion='entropy', bootstrap=False),
-              f'RandomForest entropy bootstrap=False'),
-          (
-              RandomForestClassifier(criterion='entropy', max_features=None, bootstrap=False),
-              f'RandomForest entropy max_features=None bootstrap=False'),
-          (
-              RandomForestClassifier(criterion='entropy', max_features='log2', bootstrap=False),
-              f'RandomForest entropy max_features=log2 bootstrap=False'),
+        #   (
+        #       RandomForestClassifier(criterion='entropy', bootstrap=False),
+        #       f'RandomForest entropy bootstrap=False'),
+        #   (
+        #       RandomForestClassifier(criterion='entropy', max_features=None, bootstrap=False),
+        #       f'RandomForest entropy max_features=None bootstrap=False'),
+        #   # (
+        #   #     RandomForestClassifier(criterion='entropy', max_features='log2', bootstrap=False),
+        #   #     f'RandomForest entropy max_features=log2 bootstrap=False'),
           (
               RandomForestClassifier(n_estimators=150, criterion='entropy', bootstrap=False),
               f'RandomForest n_estimators=150 entropy bootstrap=False'),
-          (
-              RandomForestClassifier(n_estimators=200, criterion='entropy', bootstrap=False),
-              f'RandomForest n_estimators=200 entropy bootstrap=False'),
-          (
-              RandomForestClassifier(n_estimators=500, criterion='entropy', bootstrap=False, max_features='log2'),
-              f'RandomForest n_estimators=500 criterion=entropy bootstrap=False max_features=log2'
-          )
+        #   (
+        #       RandomForestClassifier(n_estimators=200, criterion='entropy', bootstrap=False),
+        #       f'RandomForest n_estimators=200 entropy bootstrap=False'),
+        #   # (
+        #   #     RandomForestClassifier(n_estimators=500, criterion='entropy', bootstrap=False, max_features='log2'),
+        #   #     f'RandomForest n_estimators=500 criterion=entropy bootstrap=False max_features=log2'
+        #   # )
           ]
 
 
 def svm_teach_classify(filename):
     print("svm_teach_classify")
     print(filename)
-    with open(f"./dicts/{filename}") as json_file:
+    with open(f"../dicts/{filename}") as json_file:
         homonyms = json.load(json_file)
         best = []
         for classifier, name in full_classifier_list():
@@ -199,6 +199,8 @@ def svm_teach_classify(filename):
                 # print(f"test_size = {test_size} len x_train = {len(x_train)}, len x_test = {len(x_test)}, len y_train = {len(y_train)}, len y_test = {len(y_test)}")
                 vectorizors = create_vectorizor(x_train)
                 made_classifier = make_pipeline(*vectorizors, classifier)
+                if len(x) <= 1 or len(y) <= 1 or  len(x_train) <= 1 or len(y_train) <= 1:
+                    continue
                 made_classifier.fit(x_train, y_train)
                 y_res = made_classifier.predict(x_test)
                 print(f"{homonym:10}", end=" | ")
@@ -220,7 +222,8 @@ def svm_teach_classify(filename):
 
 def main():
     warnings.filterwarnings('ignore')
-    filename = "homonyms_with_50_samples.json"
+    filename = "homonyms_ru_clean.json"
+    # filename = "homonyms_with_50_samples.json"
     svm_teach_classify(filename)
 
 

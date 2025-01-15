@@ -1,5 +1,6 @@
 import json
 import string
+import sys
 from pprint import pprint
 
 import numpy as np
@@ -68,7 +69,7 @@ def words_to_vectors(model, words, mean=False):
             if vector is not None:
                 sum_samples.append((i, vector))
         except ValueError as err:
-            print("words_to_vectors " + "" + str(sample))
+            print("words_to_vectors " + "" + str(sample), file=sys.stderr)
             print(err)
     return sum_samples
 
@@ -94,7 +95,10 @@ def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_s
                 if log:
                     print("Слово: ", word)
                     print("Пример: ", word_data['samples'][sample[0]]['text'])
-                meaning = list(sorted(sum_meanings, key=lambda _meaning: compare_by_sklearn(sample[1], _meaning[1], metric=metric)))[0]
+                if metric == 'similarity_cosine':
+                    meaning = list(sorted(sum_meanings, key=lambda _meaning: similarity_cosine_numpy(sample[1], _meaning[1])))[0]
+                else:
+                    meaning = list(sorted(sum_meanings, key=lambda _meaning: compare_by_sklearn(sample[1], _meaning[1], metric=metric)))[0]
                 if log:
                     print("Значение: ", word_data['meanings'][meaning[0]]['определение'])
                     print("Верное значение: ", word_data['meanings'][word_data['samples'][sample[0]]['meaning']]['определение'])
@@ -107,47 +111,56 @@ def compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_s
             total_used_word += 1
         if log:
             print("__________________________________")
-    print(f"Total: {right}/{total} {right/total:.4f}")
-    print(f"Total used words: {total_used_word}/{total_word}")
+    return dict(right=right, total=total, total_word=total_word)
 
 
-def w2v_emb(filename):
-    print("Method w2v_emb")
-    print(filename)
+def w2v_emb(filename, file=sys.stdout):
+    # print("Method w2v_emb")
+    # print(filename)
     with open(f"../dicts/{filename}") as ambiguity_filtered_by_3_samples_json:
         ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
         valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
+        print(f"## Метод w2v_emb\n", file=file)
+        print(f"| Корпус | Метрика | Всего слов | Соотношение | Доля угаданных | Параметры |", file=file)
+        print(f"| --- | --- | --- | --- | --- | --- |", file=file)
 
         # bigram_transformer = Phrases(sentences)
         # model = Word2Vec(sentences=bigram_transformer[sentences], vector_size=100, window=5, min_count=1, workers=4, sg=1).wv
-        for metric in ["euclidean", "manhattan", "minkowski", "hamming", "canberra", "braycurtis"]:
+        for metric in ['similarity_cosine', "euclidean", "manhattan", "minkowski", "hamming", "canberra", "braycurtis"]:
             param_list = [
-                dict(use_lemma=False, remove_stop_words=False),
-                dict(use_lemma=True, remove_stop_words=False),
-                dict(use_lemma=False, remove_stop_words=True),
-                dict(use_lemma=True, remove_stop_words=True),
+                dict(use_lemma=False, remove_stop_words=False, vect_act_mean=True),
+                dict(use_lemma=False, remove_stop_words=False, vect_act_mean=False),
+                dict(use_lemma=True, remove_stop_words=False, vect_act_mean=True),
+                dict(use_lemma=True, remove_stop_words=False, vect_act_mean=False),
+                dict(use_lemma=False, remove_stop_words=True, vect_act_mean=True),
+                dict(use_lemma=False, remove_stop_words=True, vect_act_mean=False),
+                dict(use_lemma=True, remove_stop_words=True, vect_act_mean=True),
+                dict(use_lemma=True, remove_stop_words=True, vect_act_mean=False),
             ]
             for params in param_list:
-                sentences = get_word_texts_as_sentences(ambiguity_filtered_by_3_samples, valid_words, **params)
+                sentences = get_word_texts_as_sentences(ambiguity_filtered_by_3_samples, valid_words, use_lemma=params['use_lemma'], remove_stop_words=params['remove_stop_words'])
                 model = Word2Vec(sentences=sentences, vector_size=100, window=5, min_count=1, workers=4, sg=1).wv
-                print(f"metric = {metric}")
-                print(f"use_lemma = {params['use_lemma']}")
-                print(f"remove_stop_words = {params['remove_stop_words']}")
-                vect_act_mean = True
+                # print(f"metric = {metric}")
+                # print(f"use_lemma = {params['use_lemma']}")
+                # print(f"remove_stop_words = {params['remove_stop_words']}")
+                vect_act_mean = params['vect_act_mean']
                 if vect_act_mean:
-                    print("get_mean_vector")
+                    # print("get_mean_vector")
+                    vect = "Вектор - среднеарифметическое значение поэлементно"
                 else:
-                    print("sum_vectors")
-                compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_samples,
-                                               vect_act_mean=vect_act_mean, metric=metric, **params)
-                print()
+                    # print("sum_vectors")
+                    vect = "Вектор - сумма значений поэлементно"
+                statistic = compare_with_cosine_similarity(model, valid_words, ambiguity_filtered_by_3_samples,
+                                               vect_act_mean=vect_act_mean, metric=metric, use_lemma=params['use_lemma'], remove_stop_words=params['remove_stop_words'])
+                print(f"| {filename} | {metric} | {statistic['total_word']} | {statistic['right']}/{statistic['total']} | {statistic['right']/statistic['total']:.4f} | лемматизация = {params['use_lemma']}, Удаление стоп-слов = {params['remove_stop_words']}, {vect} |", file=file)
     print("________________________________________")
 
 
 def main():
-    filename = "homonyms_with_50_samples.json"
+    # filename = "homonyms_with_50_samples.json"
     # filename = "narusco_ru.json"
-    # filename = "homonyms_ru.json"
+    filename = "homonyms_ru.json"
+    filename = "homonyms_ru_clean.json"
     w2v_emb(filename)
 
 

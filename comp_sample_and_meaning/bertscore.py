@@ -1,4 +1,5 @@
 import json
+import sys
 
 import torch
 from transformers import AutoTokenizer, AutoModel
@@ -57,7 +58,10 @@ def compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples,
                 if log:
                     print("Слово: ", word)
                     print("Пример: ", word_data['samples'][sample[0]]['text'])
-                meaning = list(sorted(sum_meanings, key=lambda _meaning: compare_by_sklearn(sample[1], _meaning[1], metric=metric)))[0]
+                if metric == 'similarity_cosine':
+                    meaning = list(sorted(sum_meanings, key=lambda _meaning: similarity_cosine_numpy(sample[1], _meaning[1])))[0]
+                else:
+                    meaning = list(sorted(sum_meanings, key=lambda _meaning: compare_by_sklearn(sample[1], _meaning[1], metric=metric)))[0]
                 if log:
                     print("Значение: ", word_data['meanings'][meaning[0]]['определение'])
                     print("Верное значение: ", word_data['meanings'][word_data['samples'][sample[0]]['meaning']]['определение'])
@@ -70,13 +74,10 @@ def compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples,
             total_used_word += 1
         if log:
             print("__________________________________")
-    print(f"Total: {right}/{total} {right/total:.4f}")
-    print(f"Total used words: {total_used_word}/{total_word}")
+    return dict(right=right, total=total, total_word=total_word)
 
 
-def bert_score(filename):
-    print("bert_score")
-    print(filename)
+def bert_score(filename, file=sys.stdout):
     with open(f"../dicts/{filename}") as ambiguity_filtered_by_3_samples_json:
         ambiguity_filtered_by_3_samples = json.load(ambiguity_filtered_by_3_samples_json)
         valid_words = read_and_filter_words(ambiguity_filtered_by_3_samples)
@@ -86,17 +87,21 @@ def bert_score(filename):
             "DeepPavlov/rubert-base-cased", "inkoziev/sbert_synonymy"
         ]:
 
-            for metric in ["euclidean", "manhattan", "minkowski", "hamming", "canberra", "braycurtis"]:
-                print(f"model {model}")
-                print(f"metric {metric}")
-                compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples, model, metric=metric)
-                print()
+            print(f"## Метод bert_score, модель: {model}\n", file=file)
+            print(f"| Корпус | Метрика | Всего слов | Соотношение | Доля угаданных |", file=file)
+            print(f"| --- | --- | --- | --- | --- |", file=file)
+            for metric in ['similarity_cosine', "euclidean", "manhattan", "minkowski", "hamming", "canberra", "braycurtis"]:
+                statistic = compare_with_cosine_similarity(valid_words, ambiguity_filtered_by_3_samples, model, metric=metric)
+                print(
+                    f"| {filename} | {metric} | {statistic['total_word']} | {statistic['right']}/{statistic['total']} | {statistic['right'] / statistic['total']:.4f} |", file=file)
+            print()
+            print()
 
 
 def main():
-    filename = "homonyms_with_50_samples.json"
+    # filename = "homonyms_with_50_samples.json"
     # filename = "narusco_ru.json"
-    # filename = "homonyms_ru.json"
+    filename = "homonyms_ru_clean.json"
     bert_score(filename)
 
 if __name__ == "__main__":
