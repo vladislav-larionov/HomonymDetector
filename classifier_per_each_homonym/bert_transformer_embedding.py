@@ -15,7 +15,6 @@ class BertTransformerSentenceEmbedding(TransformerMixin, BaseEstimator):
     # 'sberbank-ai/sbert_large_nlu_ru'
     # https://huggingface.co/sberbank-ai/sbert_large_nlu_ru
     def __init__(self, model_name='cointegrated/rubert-tiny', batch_size=1, layer=-1):
-        print(f"model_name = {model_name}")
         self.model_name = model_name
         self.layer = layer
         self.batch_size = batch_size

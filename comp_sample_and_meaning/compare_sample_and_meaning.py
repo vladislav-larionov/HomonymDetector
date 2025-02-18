@@ -10,9 +10,9 @@ def main():
     # filename = "narusco_ru.json"
     filename = "homonyms_ru.json"
     filename = "homonyms_ru_clean.json"
-    with open("../results/comp_sample_and_meaning/res_total.md", "w") as file:
+    with open("../results/comp_sample_and_meaning/res_total_corpora.md", "w") as file:
         print(f"# {__file__}\n", file=file)
-        for filename in ["homonyms_ru_clean.json", "homonyms_ru_dirty.json", "homonyms_with_50_samples.json"]:
+        for filename in ["corpora.json"]:
             print(f"Корпус {filename}\n", file=file)
             w2v_emb(filename, file=file)
             navec_score(filename, file=file)
