@@ -1,4 +1,5 @@
 import json
+import sys
 import warnings
 from operator import itemgetter
 
@@ -31,14 +32,23 @@ def print_statistics(trues, res, label=None):
     print(f'F1_macro:\t{f1_score(trues, res, average="macro"):1.4f}')
 
 
-def print_statistics_in_row(trues, res):
-    print(f'A: {accuracy_score(trues, res):1.4f}', end=" | ")
-    print(f'P_micro: {precision_score(trues, res, average="micro"):1.4f}', end=" | ")
-    print(f'P_macro: {precision_score(trues, res, average="macro"):1.4f}', end=" | ")
-    print(f'R_micro: {recall_score(trues, res, average="micro"):1.4f}', end=" | ")
-    print(f'R_macro: {recall_score(trues, res, average="macro"):1.4f}', end=" | ")
-    print(f'F1_micro: {f1_score(trues, res, average="micro"):1.4f}', end=" | ")
-    print(f'F1_macro: {f1_score(trues, res, average="macro"):1.4f}')
+def print_statistics_in_row(trues, res, file=None):
+    if file:
+        print(f'{accuracy_score(trues, res):1.4f}', end=" | ", file=file)
+        print(f' {precision_score(trues, res, average="micro"):1.4f}', end=" | ", file=file)
+        print(f' {precision_score(trues, res, average="macro"):1.4f}', end=" | ", file=file)
+        print(f' {recall_score(trues, res, average="micro"):1.4f}', end=" | ", file=file)
+        print(f' {recall_score(trues, res, average="macro"):1.4f}', end=" | ", file=file)
+        print(f' {f1_score(trues, res, average="micro"):1.4f}', end=" | ", file=file)
+        print(f' {f1_score(trues, res, average="macro"):1.4f}', file=file)
+    else:
+        print(f'A: {accuracy_score(trues, res):1.4f}', end=" | ", file=file)
+        print(f'P_micro: {precision_score(trues, res, average="micro"):1.4f}', end=" | ", file=file)
+        print(f'P_macro: {precision_score(trues, res, average="macro"):1.4f}', end=" | ", file=file)
+        print(f'R_micro: {recall_score(trues, res, average="micro"):1.4f}', end=" | ", file=file)
+        print(f'R_macro: {recall_score(trues, res, average="macro"):1.4f}', end=" | ", file=file)
+        print(f'F1_micro: {f1_score(trues, res, average="micro"):1.4f}', end=" | ", file=file)
+        print(f'F1_macro: {f1_score(trues, res, average="macro"):1.4f}', file=file)
 
 
 def create_w2v_model(x_train: list):
@@ -57,12 +67,9 @@ def group_samples_by_meaning(samples: list):
         res[sample["meaning"]].append(sample["text"])
     return res
 
-
-def create_vectorizor(x_train):
-    model_type = "bert"
+def create_vectorizor(x_train, model_name, model_type = None):
     vectorizors = []
     if model_type == "w2v":
-        print("Model: Word2Vec + MeanEmbeddingVectorizer + StandardScaler")
         model = Word2Vec(x_train, vector_size=70, window=8, sg=1, epochs=15, workers=4)
         vectorizors.append(MeanEmbeddingVectorizer(model))
         vectorizors.append(StandardScaler())
@@ -72,7 +79,7 @@ def create_vectorizor(x_train):
         # sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
         # cointegrated/rubert-tiny2
         # cointegrated/rubert-tiny
-        model = BertTransformerEmbedding("cointegrated/rubert-tiny2")
+        model = BertTransformerEmbedding(model_name)
         vectorizors.append(model)
 
     if model_type == "tfidf":
@@ -178,13 +185,23 @@ def full_classifier_list():
           ]
 
 
-def svm_teach_classify(filename):
-    print("svm_teach_classify")
-    print(filename)
+def svm_teach_classify(filename, model_name, file=None, model_type=None):
+    if model_type:
+        print(f"{model_type}\n")
+    else:
+        print(f"{model_name}\n")
+    if file:
+        if model_type:
+            print(f"## {model_type}\n", file=file)
+        else:
+            print(f"## {model_name}\n", file=file)
     with open(f"../dicts/{filename}") as json_file:
         homonyms = json.load(json_file)
         best = []
         for classifier, name in full_classifier_list():
+            print(f'', file=file)
+            print(f'| бор | A | P_micro | P_macro | R_micro | R_macro | F1_micro | F1_macro |', file=file)
+            print(f'| --- | --- | --- | --- | --- | --- | --- | --- |', file=file)
             micro_f_avg = 0
             macro_f_avg = 0
             print(name)
@@ -197,34 +214,54 @@ def svm_teach_classify(filename):
                     x.append(sample["text"])
                 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size, random_state=42)
                 # print(f"test_size = {test_size} len x_train = {len(x_train)}, len x_test = {len(x_test)}, len y_train = {len(y_train)}, len y_test = {len(y_test)}")
-                vectorizors = create_vectorizor(x_train)
+                vectorizors = create_vectorizor(x_train, model_name, model_type)
                 made_classifier = make_pipeline(*vectorizors, classifier)
                 if len(x) <= 1 or len(y) <= 1 or  len(x_train) <= 1 or len(y_train) <= 1:
                     continue
                 made_classifier.fit(x_train, y_train)
                 y_res = made_classifier.predict(x_test)
+                if file:
+                    print(f"| {homonym:10} ", end=" | ", file=file)
                 print(f"{homonym:10}", end=" | ")
                 # print(name, end=" | ")
+                if file:
+                    print_statistics_in_row(y_test, y_res, file=file)
                 print_statistics_in_row(y_test, y_res)
                 micro_f_avg += f1_score(y_test, y_res, average="micro")
                 macro_f_avg += f1_score(y_test, y_res, average="macro")
             micro_f_avg = micro_f_avg/len(list(homonyms.keys()))
             macro_f_avg = macro_f_avg/len(list(homonyms.keys()))
             best.append((name, micro_f_avg, macro_f_avg))
-            print(f'F1_micro_avg: {micro_f_avg:1.4f}', end=" | ")
+            if file:
+                print(f'\n\n{name} | {model_name or model_type} | F1_micro_avg: {micro_f_avg:1.4f} | F1_macro_avg: {macro_f_avg:1.4f} |', file=file)
+            print(f'{name} | {model_name} | F1_micro_avg: {micro_f_avg:1.4f}', end=" | ")
             print(f'F1_macro_avg: {macro_f_avg:1.4f}')
             print("____________")
+
+        if file:
+            print("\nbest:\n", file=file)
         print("best:")
         best_res = max(best, key=itemgetter(1))
+        if file:
+            print(f'{best_res[0]} | F1_micro_avg = {best_res[1]:1.4f} | F1_macro_avg = {best_res[2]:1.4f}', file=file)
         print(f'{best_res[0]} | F1_micro_avg = {best_res[1]:1.4f} | F1_macro_avg = {best_res[2]:1.4f}')
         best_res = max(best, key=itemgetter(2))
+        if file:
+            print(f'{best_res[0]} | F1_micro_avg = {best_res[1]:1.4f} | F1_macro_avg = {best_res[2]:1.4f}\n\n', file=file)
         print(f'{best_res[0]} | F1_micro_avg = {best_res[1]:1.4f} | F1_macro_avg = {best_res[2]:1.4f}')
 
 def main():
+    print("svm_teach_classify")
     warnings.filterwarnings('ignore')
-    filename = "homonyms_ru_clean.json"
+    filename = "corpora.json"
     # filename = "homonyms_with_50_samples.json"
-    svm_teach_classify(filename)
+    with open("../results/classifier_per_each_homonym/res_total_corpora.md", "w") as file:
+        print(f"# {filename}", file=file)
+        svm_teach_classify(filename, None, file,"tfidf")
+        svm_teach_classify(filename, None, file,"w2v")
+        for model_name in ["sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", "cointegrated/rubert-tiny2", "cointegrated/rubert-tiny"]:
+            svm_teach_classify(filename, model_name, file,"bert")
+
 
 
 if __name__ == "__main__":
